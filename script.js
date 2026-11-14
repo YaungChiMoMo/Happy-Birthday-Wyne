@@ -311,7 +311,7 @@ const intensity = {
   login: 1,
   home: 0.75,
   songs: 0.35,
-  countdown: 0.55,
+  photobooth: 0.3,
   wishes: 0.45,
 };
 let rain = 1,
@@ -452,7 +452,7 @@ tr.innerHTML = Array.from(
   { length: 96 },
   () => `<i style="--d:${(Math.random() * 0.28).toFixed(2)}s"></i>`,
 ).join("");
-const pages = ["login", "home", "songs", "countdown", "wishes"];
+const pages = ["login", "home", "songs", "photobooth", "wishes"];
 let loggedIn = false;
 try {
   loggedIn = sessionStorage.getItem("carat-in") === "1";
@@ -480,6 +480,7 @@ function show(p) {
   if (p === "home") maybeGuide();
   if (p === "wishes") updateLock();
   if (p === "wishes") resetLetter();
+  document.dispatchEvent(new CustomEvent("pagechange", { detail: p }));
 }
 function go() {
   const p = target();
@@ -973,10 +974,6 @@ window.onSpotifyIframeApiReady = (API) => {
 const TZ_OFFSET_H = 9; // Japan has no daylight saving
 const jstDate = (y, m, d) =>
   new Date(Date.UTC(y, m - 1, d) - TZ_OFFSET_H * 3600e3);
-const jstNowParts = () => {
-  const n = new Date(Date.now() + TZ_OFFSET_H * 3600e3);
-  return { y: n.getUTCFullYear(), m: n.getUTCMonth() + 1, d: n.getUTCDate() };
-};
 const fromISO = (iso) => {
   const [y, m, d] = iso.split("-").map(Number);
   return jstDate(y, m, d);
@@ -990,131 +987,8 @@ const fmtJST = (dt) =>
     year: "numeric",
   });
 
-/* ---------------- Countdown (customisable + saved) ---------------- */
+/* ---------------- Shared helpers ---------------- */
 const pad = (v) => String(v).padStart(2, "0");
-function defaultDate() {
-  const n = jstNowParts();
-  let y = n.y;
-  if (
-    Date.now() - jstDate(y, CONFIG.birthday.month, CONFIG.birthday.day) >
-    864e5
-  )
-    y++;
-  return `${y}-${pad(CONFIG.birthday.month)}-${pad(CONFIG.birthday.day)}`;
-}
-const saved = store.get("bday-countdown-v3") || {};
-let state = {
-  title: saved.title || "Days until my birthday",
-  date: saved.date || defaultDate(),
-  notes: saved.notes || [
-    "Don't forget to enjoy your life ✨",
-    "Play Very Nice really loud",
-    "Eat cake with your favourite people",
-  ],
-};
-let dirty = false;
-const tDate = () => fromISO(state.date);
-function renderTitle() {
-  $("#cdTitle").textContent = state.title;
-  $("#titleInput").value = state.title;
-}
-$("#cdTitle").addEventListener("input", () => {
-  state.title = $("#cdTitle").textContent.trim() || "My countdown";
-  $("#titleInput").value = state.title;
-  dirty = true;
-});
-$("#cdTitle").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-    e.target.blur();
-  }
-});
-$("#titleInput").addEventListener("input", (e) => {
-  state.title = e.target.value || "My countdown";
-  $("#cdTitle").textContent = state.title;
-  dirty = true;
-});
-$("#dateInput").addEventListener("change", (e) => {
-  if (!e.target.value) return;
-  state.date = e.target.value;
-  showDate();
-  tick();
-  dirty = true;
-});
-function showDate() {
-  const td = tDate(),
-    age = CONFIG.bornYear
-      ? Number(state.date.slice(0, 4)) - CONFIG.bornYear
-      : 0;
-  $("#cdDate").innerHTML =
-    fmtJST(td) +
-    `<small class="cd-sub">${age > 0 && age < 120 ? `turning ${age} ♥ · ` : ""}Japan time</small>`;
-  $("#dateInput").value = state.date;
-}
-function renderNotes() {
-  const box = $("#notes");
-  if (!state.notes.length) {
-    box.innerHTML =
-      '<div class="empty">No notes yet — write your first one ♥</div>';
-    return;
-  }
-  box.innerHTML = state.notes
-    .map(
-      (n, i) =>
-        `<div class="note"><span class="pin"></span><span class="t" contenteditable="true" data-i="${i}" spellcheck="false"></span><button class="del" data-i="${i}" aria-label="Delete note">x</button></div>`,
-    )
-    .join("");
-  box
-    .querySelectorAll(".t")
-    .forEach((el) => (el.textContent = state.notes[+el.dataset.i]));
-}
-$("#notes").addEventListener("input", (e) => {
-  const t = e.target.closest(".t");
-  if (t) {
-    state.notes[+t.dataset.i] = t.textContent;
-    dirty = true;
-  }
-});
-$("#notes").addEventListener("click", (e) => {
-  const d = e.target.closest(".del");
-  if (d) {
-    state.notes.splice(+d.dataset.i, 1);
-    renderNotes();
-    dirty = true;
-  }
-});
-function addNote() {
-  const v = $("#noteInput").value.trim();
-  if (!v) {
-    $("#noteInput").focus();
-    return;
-  }
-  state.notes.push(v);
-  $("#noteInput").value = "";
-  renderNotes();
-  dirty = true;
-  toast("Note added — tap Save to keep it");
-}
-$("#addNote").onclick = addNote;
-$("#noteInput").addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey) {
-    e.preventDefault();
-    addNote();
-  }
-});
-$("#saveBtn").onclick = () => {
-  state.notes = state.notes.map((n) => n.trim()).filter(Boolean);
-  const ok = store.set("bday-countdown-v3", state);
-  renderNotes();
-  dirty = false;
-  toast(
-    ok
-      ? "Saved! Your countdown is kept on this device ♥"
-      : "Could not save in this browser",
-  );
-  const r = $("#saveBtn").getBoundingClientRect();
-  if (ok) burst(r.left + r.width / 2, r.top, 14);
-};
 let tt;
 function toast(m) {
   $("#toastTxt").textContent = m;
@@ -1122,51 +996,6 @@ function toast(m) {
   clearTimeout(tt);
   tt = setTimeout(() => $("#toast").classList.remove("show"), 2400);
 }
-$("#secblocks").innerHTML = "<i></i>".repeat(30);
-function setDigits(id, str) {
-  const box = document.getElementById(id);
-  if (box.children.length !== str.length) {
-    box.innerHTML = [...str]
-      .map((c) => `<div class="digit"><span>${c}</span></div>`)
-      .join("");
-    return;
-  }
-  [...str].forEach((c, i) => {
-    const dg = box.children[i],
-      last = dg.lastElementChild;
-    if (last.textContent === c) return;
-    last.className = "out";
-    setTimeout(() => last.remove(), 500);
-    const n = document.createElement("span");
-    n.className = "in";
-    n.textContent = c;
-    dg.appendChild(n);
-  });
-}
-function tick() {
-  const diff = tDate() - new Date(),
-    reached = diff <= 0 && diff > -864e5;
-  $("#units").style.display = reached ? "none" : "";
-  $("#reached").style.display = reached ? "block" : "none";
-  const s = Math.max(0, Math.floor(diff / 1000));
-  setDigits("d-days", pad(Math.floor(s / 86400)));
-  setDigits("d-hours", pad(Math.floor((s % 86400) / 3600)));
-  setDigits("d-mins", pad(Math.floor((s % 3600) / 60)));
-  setDigits("d-secs", pad(s % 60));
-  const on = Math.round((60 - (s % 60)) / 2);
-  $$("#secblocks i").forEach((b, i) => b.classList.toggle("on", i < on));
-}
-renderTitle();
-showDate();
-renderNotes();
-tick();
-setInterval(tick, 1000);
-addEventListener("beforeunload", (e) => {
-  if (dirty) {
-    e.preventDefault();
-    e.returnValue = "";
-  }
-});
 
 /* ---------------- Love letter ---------------- */
 /* split letter into words once, for the soft writing animation */

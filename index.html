@@ -15,7 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=Silkscreen&family=Caveat:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css?v=2" />
+    <link rel="stylesheet" href="style.css?v=3" />
   </head>
   <body>
     <div class="sky" id="sky"></div>
@@ -28,7 +28,7 @@
         <div class="pill" id="pill"></div>
         <a href="#home" data-p="home">Home</a>
         <a href="#songs" data-p="songs">Songs</a>
-        <a href="#countdown" data-p="countdown">Countdown</a>
+        <a href="#photobooth" data-p="photobooth">Photobooth</a>
         <a href="#wishes" data-p="wishes">Birthday Wishes</a>
       </div>
       <button class="help" id="helpBtn" aria-label="How to use">?</button>
@@ -102,7 +102,7 @@
             </h1>
             <p class="lead pop" style="animation-delay: 0.9s">
               Today the whole sky is light blue for you. I built this little
-              world one block at a time — full of little surprises, a countdown,
+              world one block at a time — full of little surprises, a photobooth,
               and a letter from my heart.
             </p>
             <div class="btn-row pop" style="animation-delay: 1.2s">
@@ -130,10 +130,10 @@
               <h3>Songs</h3>
               <p>A few favourites picked just for you.</p></a
             >
-            <a class="tile box reveal" href="#countdown"
-              ><span class="ico" data-spr="clock"></span>
-              <h3>Countdown</h3>
-              <p>Your own countdown — rename it, write notes, save it.</p></a
+            <a class="tile box reveal" href="#photobooth"
+              ><span class="ico" data-spr="camera"></span>
+              <h3>Photobooth</h3>
+              <p>Snap a birthday photo in a cute frame and save it.</p></a
             >
             <a class="tile box reveal" href="#wishes"
               ><span class="ico" data-spr="letter"></span>
@@ -214,88 +214,42 @@
         </div>
         <div class="next-wrap reveal">
           <div class="label">What's next?</div>
-          <a class="btn pink" href="#countdown">Next: Countdown ▶</a>
+          <a class="btn pink" href="#photobooth">Next: Photobooth ▶</a>
         </div>
       </section>
 
-      <!-- ================= COUNTDOWN ================= -->
-      <section class="page" id="countdown">
-        <div class="cd">
-          <div class="cd-title-wrap reveal">
-            <div class="label">Countdown</div>
-            <div
-              class="cd-title"
-              id="cdTitle"
-              contenteditable="true"
-              spellcheck="false"
-            >
-              Days until your birthday
-            </div>
-            <span class="edit-hint">✎ tap the title to rename it</span>
+      <!-- ================= PHOTOBOOTH ================= -->
+      <section class="page" id="photobooth">
+        <div class="wrap">
+          <div class="sec-head reveal">
+            <div class="label">Part 2 · Say cheese</div>
+            <h2>Photobooth</h2>
+            <p>Pick a frame, smile, and keep the photo forever.</p>
           </div>
-          <div class="cd-panel box reveal">
-            <div class="units" id="units">
-              <div class="unit">
-                <div class="digits" id="d-days"></div>
-                <small>DAYS</small>
-              </div>
-              <div class="unit">
-                <div class="digits" id="d-hours"></div>
-                <small>HOURS</small>
-              </div>
-              <div class="unit">
-                <div class="digits" id="d-mins"></div>
-                <small>MINUTES</small>
-              </div>
-              <div class="unit">
-                <div class="digits" id="d-secs"></div>
-                <small>SECONDS</small>
-              </div>
+          <div class="booth box reveal">
+            <div class="booth-stage" id="boothStage">
+              <canvas id="boothCanvas" width="900" height="1125" aria-label="Photo preview"></canvas>
+              <video id="boothVideo" playsinline muted></video>
+              <div class="booth-count" id="boothCount" aria-live="polite"></div>
+              <div class="booth-flash" id="boothFlash"></div>
             </div>
-            <div class="reached" id="reached">
-              It's your day! Happy Birthday ♥
+            <div class="booth-side">
+              <h3><span class="spr-sm" data-spr="star"></span>Choose a frame</h3>
+              <div class="frames" id="frames" role="radiogroup" aria-label="Photo frame"></div>
+              <div class="booth-ctrl" id="ctrlLive">
+                <button class="btn pink" id="camBtn">● Start camera</button>
+                <button class="btn pink" id="snapBtn" hidden>● Take photo</button>
+                <label class="btn white sm" id="uploadBtn">
+                  Upload a photo
+                  <input type="file" id="boothFile" accept="image/*" hidden />
+                </label>
+              </div>
+              <div class="booth-ctrl" id="ctrlShot" hidden>
+                <button class="btn pink" id="saveShot">♥ Save photo</button>
+                <button class="btn white sm" id="retake">↺ Retake</button>
+              </div>
+              <p class="booth-tip" id="boothTip">Tap <b>Start camera</b> and allow camera access. Nothing is uploaded — your photo stays on your device.</p>
             </div>
-            <div class="secblocks" id="secblocks"></div>
-            <div class="cd-date" id="cdDate"></div>
-          </div>
-
-          <div class="cd-grid">
-            <div class="panel box soft reveal">
-              <h3>
-                <span class="spr-sm" data-spr="clock"></span>The date
-              </h3>
-              <p class="desc">Choose the day to count down to.</p>
-              <input
-                class="inp"
-                type="date"
-                id="dateInput"
-                aria-label="Countdown date"
-              />
-              <h3>
-                <span class="spr-sm" data-spr="star"></span>Title
-              </h3>
-              <p class="desc">Or rename your countdown here.</p>
-              <input class="inp" id="titleInput" maxlength="60" />
-            </div>
-            <div class="panel box soft reveal">
-              <h3>
-                <span class="spr-sm" data-spr="heart"></span>My notes
-              </h3>
-              <p class="desc">
-                Wishes, plans, little things to remember. Tap a note to edit it.
-              </p>
-              <textarea
-                class="inp"
-                id="noteInput"
-                placeholder="Write a note…"
-                maxlength="160"
-              ></textarea>
-              <button class="btn sm" id="addNote">+ Add note</button>
-              <div class="notes" id="notes"></div>
-            </div>
-          </div>
-          <div class="savebar">
-            <button class="btn pink" id="saveBtn">♥ Save my countdown</button>
           </div>
         </div>
         <div class="next-wrap reveal">
@@ -314,7 +268,7 @@
             <p>It will open on your birthday,<br><b id="lockDate"></b> (Japan time).<br>Come back then ♥</p>
             <div class="lockcd" id="lockcd"></div>
             <div class="btn-row">
-              <a class="btn pink" href="#countdown">See the countdown</a>
+              <a class="btn pink" href="#photobooth">Visit the photobooth</a>
               <button class="btn white" id="previewBtn" hidden>👀 Preview (only on your computer)</button>
             </div>
           </div>
@@ -407,7 +361,7 @@
         <h3>Welcome, Wyne!</h3>
         <ol class="steps">
           <li><span class="sn">1</span><span><b>Songs</b> — listen to our songs. Tap a song to play it.</span></li>
-          <li><span class="sn">2</span><span><b>Countdown</b> — see how long until your birthday, and write your own notes.</span></li>
+          <li><span class="sn">2</span><span><b>Photobooth</b> — take a birthday photo in a pixel frame and save it.</span></li>
           <li><span class="sn">3</span><span><b>Birthday Wishes</b> — my letter to you. It unlocks on your birthday, then tap the envelope to open it.</span></li>
         </ol>
         <p class="tip">Use the menu at the top to move between pages. Tap <b>?</b> anytime to see this again.</p>
@@ -445,6 +399,7 @@
       </symbol>
     </svg>
 
-    <script src="script.js?v=2"></script>
+    <script src="script.js?v=3"></script>
+    <script src="photobooth.js?v=1"></script>
   </body>
 </html>

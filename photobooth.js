@@ -1,0 +1,399 @@
+/* ===================== Photobooth =====================
+   Live camera + decorated pixel frames, drawn on one canvas.
+   Photos never leave the device: they are only drawn and saved locally.
+   Uses helpers from script.js: $, SPR, PAL, CONFIG, pad, toast, burst. */
+(() => {
+  const W = 900,
+    H = 1125;
+  const HOLE = { x: 56, y: 56, w: 788, h: 832 };
+  const NAME = CONFIG.friendName.replace(/^dearest\s*/i, "") || "You";
+  const AGE = Number(CONFIG.wishesOpen.slice(0, 4)) - CONFIG.bornYear;
+  const COUNT_FROM = 3;
+  const COUNT_MS = 800;
+  const MAX_UPLOAD = 1600;
+  const FONT_PIXEL = "'Pixelify Sans', monospace";
+  const FONT_TINY = "Silkscreen, monospace";
+  const FONT_HAND = "Caveat, cursive";
+
+  const canvas = $("#boothCanvas"),
+    ctx = canvas.getContext("2d"),
+    video = $("#boothVideo");
+
+  let frameId = "sky";
+  let stream = null;
+  let raf = 0;
+  let busy = false;
+  let still = null; // { img, mirror }
+  let overlays = {};
+
+  /* ---------- drawing helpers ---------- */
+  function drawSprite(c, name, x, y, px) {
+    SPR[name].forEach((row, ry) =>
+      [...row].forEach((ch, rx) => {
+        if (ch === ".") return;
+        c.fillStyle = PAL[ch];
+        c.fillRect(x + rx * px, y + ry * px, px, px);
+      }),
+    );
+  }
+  function ring(c, x, y, w, h, t, color) {
+    c.fillStyle = color;
+    c.fillRect(x - t, y - t, w + 2 * t, t);
+    c.fillRect(x - t, y + h, w + 2 * t, t);
+    c.fillRect(x - t, y, t, h);
+    c.fillRect(x + w, y, t, h);
+  }
+  function text(c, str, x, y, font, fill, shadow) {
+    c.font = font;
+    c.textAlign = "center";
+    c.textBaseline = "middle";
+    if (shadow) {
+      c.fillStyle = shadow;
+      c.fillText(str, x + 5, y + 5);
+    }
+    c.fillStyle = fill;
+    c.fillText(str, x, y);
+  }
+  function today() {
+    const d = new Date();
+    return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}`;
+  }
+
+  /* ---------- frames: base (behind the hole) + deco (on top) ---------- */
+  const FRAMES = [
+    {
+      id: "sky",
+      name: "Sky",
+      base(c) {
+        ["#f4fbff", "#e3f4ff", "#c7e9ff", "#9fd6fb"].forEach((col, i) => {
+          c.fillStyle = col;
+          c.fillRect(0, (i * H) / 4, W, H / 4 + 1);
+        });
+      },
+      deco(c) {
+        ring(c, HOLE.x, HOLE.y, HOLE.w, HOLE.h, 8, PAL.X);
+        drawSprite(c, "cloud", 20, 14, 10);
+        drawSprite(c, "sun", W - 130, 10, 14);
+        drawSprite(c, "heart", 24, HOLE.y + HOLE.h - 60, 12);
+        drawSprite(c, "star", W - 110, HOLE.y + HOLE.h - 52, 12);
+        text(c, "HAPPY BIRTHDAY", W / 2, 950, `700 78px ${FONT_PIXEL}`, PAL.X, "#fff");
+        text(c, NAME.toUpperCase(), W / 2, 1030, `600 60px ${FONT_PIXEL}`, PAL.R, "#fff");
+        const half = c.measureText(NAME.toUpperCase()).width / 2;
+        drawSprite(c, "heart", W / 2 - half - 80, 1006, 7);
+        drawSprite(c, "heart", W / 2 + half + 31, 1006, 7);
+        text(c, today(), W / 2, 1092, `22px ${FONT_TINY}`, "#41709c");
+      },
+    },
+    {
+      id: "carat",
+      name: "Carat",
+      base(c) {
+        c.fillStyle = PAL.P;
+        c.fillRect(0, 0, W, H);
+        c.fillStyle = "#ffc2d4";
+        for (let y = 0; y < H; y += 32)
+          for (let x = (y / 32) % 2 ? 32 : 0; x < W; x += 64)
+            c.fillRect(x, y, 32, 32);
+      },
+      deco(c) {
+        ring(c, HOLE.x, HOLE.y, HOLE.w, HOLE.h, 6, "#fff");
+        ring(c, HOLE.x - 6, HOLE.y - 6, HOLE.w + 12, HOLE.h + 12, 6, PAL.R);
+        drawSprite(c, "gem", 14, 14, 10);
+        drawSprite(c, "gem", W - 104, 14, 10);
+        drawSprite(c, "star", 18, HOLE.y + HOLE.h - 50, 11);
+        drawSprite(c, "heart", W - 96, HOLE.y + HOLE.h - 60, 12);
+        text(c, `HAPPY BIRTHDAY, ${NAME.toUpperCase()}`, W / 2, 955, `700 60px ${FONT_PIXEL}`, "#fff", PAL.R);
+        text(c, "13 + 3 + 1 = 17 + YOU", W / 2, 1030, `26px ${FONT_TINY}`, PAL.R);
+        text(c, today(), W / 2, 1085, `20px ${FONT_TINY}`, PAL.R);
+      },
+    },
+    {
+      id: "polaroid",
+      name: "Polaroid",
+      base(c) {
+        c.fillStyle = PAL.p;
+        c.fillRect(0, 0, W, H);
+      },
+      deco(c) {
+        ring(c, 6, 6, W - 12, H - 12, 6, PAL.X);
+        ring(c, HOLE.x, HOLE.y, HOLE.w, HOLE.h, 4, PAL.X);
+        text(c, `Happy Birthday, ${NAME}`, W / 2, 975, `700 92px ${FONT_HAND}`, "#2a4a6e");
+        const sub = AGE > 0 && AGE < 120 ? `turning ${AGE}  ·  ${today()}` : today();
+        text(c, sub, W / 2, 1060, `600 44px ${FONT_HAND}`, "#41709c");
+        drawSprite(c, "flower", 40, 1010, 10);
+        drawSprite(c, "heart", W - 110, 1010, 10);
+      },
+    },
+  ];
+  const frameById = (id) => FRAMES.find((f) => f.id === id) || FRAMES[0];
+
+  function overlay(id) {
+    if (overlays[id]) return overlays[id];
+    const c = document.createElement("canvas");
+    c.width = W;
+    c.height = H;
+    const g = c.getContext("2d");
+    const f = frameById(id);
+    f.base(g);
+    g.clearRect(HOLE.x, HOLE.y, HOLE.w, HOLE.h);
+    f.deco(g);
+    overlays = { ...overlays, [id]: c };
+    return c;
+  }
+
+  /* ---------- compose photo + frame ---------- */
+  function drawCover(c, src, mirror) {
+    const sw = src.videoWidth || src.width,
+      sh = src.videoHeight || src.height;
+    if (!sw || !sh) return;
+    const k = Math.max(HOLE.w / sw, HOLE.h / sh),
+      cw = HOLE.w / k,
+      ch = HOLE.h / k;
+    c.save();
+    if (mirror) {
+      c.translate(2 * HOLE.x + HOLE.w, 0);
+      c.scale(-1, 1);
+    }
+    c.drawImage(src, (sw - cw) / 2, (sh - ch) / 2, cw, ch, HOLE.x, HOLE.y, HOLE.w, HOLE.h);
+    c.restore();
+  }
+  function drawPlaceholder(c) {
+    c.fillStyle = "#c7e9ff";
+    c.fillRect(HOLE.x, HOLE.y, HOLE.w, HOLE.h);
+    drawSprite(c, "camera", W / 2 - 96, HOLE.y + HOLE.h / 2 - 130, 24);
+    text(c, "YOUR PHOTO HERE", W / 2, HOLE.y + HOLE.h / 2 + 90, `30px ${FONT_TINY}`, PAL.X);
+  }
+  function render(src, mirror) {
+    ctx.clearRect(0, 0, W, H);
+    if (src) drawCover(ctx, src, mirror);
+    else drawPlaceholder(ctx);
+    ctx.drawImage(overlay(frameId), 0, 0);
+  }
+  function refresh() {
+    if (raf) return; // live loop redraws by itself
+    render(still && still.img, still && still.mirror);
+  }
+
+  /* ---------- UI state ---------- */
+  function setMode(m) {
+    $("#camBtn").hidden = m !== "idle";
+    $("#snapBtn").hidden = m !== "live";
+    $("#ctrlLive").hidden = m === "shot";
+    $("#ctrlShot").hidden = m !== "shot";
+  }
+  function tip(msg) {
+    $("#boothTip").textContent = msg;
+  }
+
+  /* ---------- frame picker ---------- */
+  function renderPicker() {
+    $("#frames").innerHTML = FRAMES.map(
+      (f) =>
+        `<button class="frame-opt" role="radio" aria-checked="${f.id === frameId}" data-f="${f.id}"><canvas width="${W / 5}" height="${H / 5}"></canvas>${f.name}</button>`,
+    ).join("");
+    $("#frames")
+      .querySelectorAll(".frame-opt")
+      .forEach((b) => {
+        const g = b.querySelector("canvas").getContext("2d");
+        g.scale(0.2, 0.2);
+        drawPlaceholder(g);
+        g.drawImage(overlay(b.dataset.f), 0, 0);
+      });
+  }
+  $("#frames").addEventListener("click", (e) => {
+    const b = e.target.closest(".frame-opt");
+    if (!b) return;
+    frameId = b.dataset.f;
+    $("#frames")
+      .querySelectorAll(".frame-opt")
+      .forEach((x) => x.setAttribute("aria-checked", String(x === b)));
+    refresh();
+  });
+
+  /* ---------- camera ---------- */
+  function cameraError(err) {
+    const n = err && err.name;
+    if (n === "NotAllowedError")
+      return "Camera access was blocked. Allow it in your browser settings, or upload a photo instead.";
+    if (n === "NotFoundError" || n === "OverconstrainedError")
+      return "No camera was found. You can upload a photo instead.";
+    return "The camera could not start. You can upload a photo instead.";
+  }
+  function loop() {
+    render(video, true);
+    raf = requestAnimationFrame(loop);
+  }
+  function stopCamera() {
+    cancelAnimationFrame(raf);
+    raf = 0;
+    if (stream) stream.getTracks().forEach((t) => t.stop());
+    stream = null;
+    video.srcObject = null;
+  }
+  async function startCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      tip("This browser can't open the camera here. You can upload a photo instead.");
+      return;
+    }
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 1280 } },
+        audio: false,
+      });
+      video.srcObject = stream;
+      await video.play();
+      still = null;
+      setMode("live");
+      tip("Smile! Tap Take photo and hold still for 3 seconds.");
+      cancelAnimationFrame(raf);
+      loop();
+    } catch (err) {
+      stopCamera();
+      setMode("idle");
+      tip(cameraError(err));
+      toast("The camera could not start");
+    }
+  }
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  async function snap() {
+    if (busy || !stream) return;
+    busy = true;
+    $("#snapBtn").disabled = true;
+    for (let n = COUNT_FROM; n > 0 && stream; n--) {
+      $("#boothCount").innerHTML = `<span>${n}</span>`;
+      await sleep(COUNT_MS);
+    }
+    $("#boothCount").innerHTML = "";
+    $("#snapBtn").disabled = false;
+    busy = false;
+    if (!stream || !video.videoWidth) return; // left the page mid-countdown
+    const shot = document.createElement("canvas");
+    shot.width = video.videoWidth;
+    shot.height = video.videoHeight;
+    shot.getContext("2d").drawImage(video, 0, 0);
+    stopCamera();
+    still = { img: shot, mirror: true };
+    render(shot, true);
+    setMode("shot");
+    tip("Love it? Tap Save photo. Not quite? Retake, or try another frame.");
+    const fl = $("#boothFlash");
+    fl.classList.remove("go");
+    void fl.offsetWidth;
+    fl.classList.add("go");
+    const r = canvas.getBoundingClientRect();
+    burst(r.left + r.width / 2, r.top + r.height / 2, 24);
+  }
+
+  /* ---------- upload ---------- */
+  function loadImage(file) {
+    return new Promise((res, rej) => {
+      const img = new Image();
+      img.onload = () => {
+        const k = Math.min(1, MAX_UPLOAD / Math.max(img.width, img.height)),
+          c = document.createElement("canvas");
+        c.width = Math.round(img.width * k);
+        c.height = Math.round(img.height * k);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(img.src);
+        res(c);
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(img.src);
+        rej(new Error("image load failed"));
+      };
+      img.src = URL.createObjectURL(file);
+    });
+  }
+  $("#boothFile").addEventListener("change", async (e) => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast("Please choose a photo");
+      return;
+    }
+    try {
+      const img = await loadImage(file);
+      stopCamera();
+      still = { img, mirror: false };
+      render(img, false);
+      setMode("shot");
+      tip("Love it? Tap Save photo, or try another frame.");
+    } catch (err) {
+      toast("Sorry, that photo could not be opened");
+    }
+  });
+
+  /* ---------- save ---------- */
+  function download(blob, name) {
+    const url = URL.createObjectURL(blob),
+      a = document.createElement("a");
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+  }
+  async function savePhoto() {
+    const blob = await new Promise((r) => canvas.toBlob(r, "image/png"));
+    if (!blob) {
+      toast("Sorry, the photo could not be saved");
+      return;
+    }
+    const name = `birthday-${NAME.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${Date.now()}.png`;
+    const file = new File([blob], name, { type: "image/png" });
+    const touch = matchMedia("(pointer: coarse)").matches;
+    if (touch && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: "Happy Birthday" });
+        toast("Photo ready ♥");
+        return;
+      } catch (err) {
+        if (err && err.name === "AbortError") return; // she closed the share sheet
+      }
+    }
+    download(blob, name);
+    toast("Photo saved ♥");
+  }
+
+  /* ---------- wiring ---------- */
+  $("#camBtn").onclick = startCamera;
+  $("#snapBtn").onclick = snap;
+  $("#saveShot").onclick = savePhoto;
+  $("#retake").onclick = () => {
+    const fromCamera = still && still.mirror;
+    still = null;
+    setMode("idle");
+    refresh();
+    if (fromCamera) startCamera();
+  };
+  function pause() {
+    if (!stream) return;
+    stopCamera();
+    setMode(still ? "shot" : "idle");
+    refresh();
+  }
+  document.addEventListener("pagechange", (e) => {
+    if (e.detail !== "photobooth") pause();
+  });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) pause();
+  });
+
+  setMode("idle");
+  renderPicker();
+  refresh();
+  /* redraw once the pixel/handwriting fonts have loaded */
+  Promise.all(
+    [`700 78px ${FONT_PIXEL}`, `22px ${FONT_TINY}`, `700 92px ${FONT_HAND}`].map((f) =>
+      document.fonts.load(f),
+    ),
+  )
+    .then(() => {
+      overlays = {};
+      renderPicker();
+      refresh();
+    })
+    .catch(() => {}); // fonts are optional: fallback fonts still draw fine
+})();
