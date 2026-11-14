@@ -253,9 +253,12 @@
   function setMode(m) {
     $("#camBtn").hidden = m !== "idle";
     $("#snapBtn").hidden = m !== "live";
+    $("#camOff").hidden = m !== "live";
+    $("#retake").textContent = still && !still.mirror ? "↺ Choose another" : "↺ Retake";
     $("#ctrlLive").hidden = m === "shot";
     $("#ctrlShot").hidden = m !== "shot";
   }
+  const START_TIP = $("#boothTip").innerHTML;
   function tip(msg) {
     $("#boothTip").textContent = msg;
   }
@@ -361,7 +364,7 @@
     still = { img: shot, mirror: true };
     refresh();
     setMode("shot");
-    tip("Love it? Tap Save photo. Not quite? Retake, or try another frame.");
+    tip("Love it? Tap Save photo. Not quite? Retake, try another frame, or Cancel to start over.");
     const fl = $("#boothFlash");
     fl.classList.remove("go");
     void fl.offsetWidth;
@@ -404,7 +407,7 @@
       still = { img, mirror: false };
       refresh();
       setMode("shot");
-      tip("Love it? Tap Save photo, or try another frame.");
+      tip("Love it? Tap Save photo. Not quite? Choose another, try another frame, or Cancel to start over.");
     } catch (err) {
       toast("Sorry, that photo could not be opened");
     }
@@ -447,13 +450,29 @@
   $("#camBtn").onclick = startCamera;
   $("#snapBtn").onclick = snap;
   $("#saveShot").onclick = savePhoto;
+  /* Retake: camera photo -> reopen the camera; uploaded photo -> pick another file */
   $("#retake").onclick = () => {
-    const fromCamera = still && still.mirror;
+    if (still && !still.mirror) {
+      $("#boothFile").click();
+      return;
+    }
     still = null;
     setMode("idle");
     refresh();
-    if (fromCamera) startCamera();
+    startCamera();
   };
+  /* Cancel: throw the photo away (or close the camera) and go back to the start */
+  function cancel() {
+    stopCamera();
+    still = null;
+    blobToken++;
+    shotBlob = null;
+    setMode("idle");
+    refresh();
+    $("#boothTip").innerHTML = START_TIP;
+  }
+  $("#cancelShot").onclick = cancel;
+  $("#camOff").onclick = cancel;
   function pause() {
     if (!stream) return;
     stopCamera();

@@ -242,6 +242,7 @@
               <div class="booth-ctrl" id="ctrlLive">
                 <button class="btn pink" id="camBtn">● Start camera</button>
                 <button class="btn pink" id="snapBtn" hidden>● Take photo</button>
+                <button class="btn white sm" id="camOff" hidden>✕ Cancel</button>
                 <label class="btn white sm" id="uploadBtn">
                   Upload a photo
                   <input type="file" id="boothFile" accept="image/*" hidden />
@@ -250,6 +251,7 @@
               <div class="booth-ctrl" id="ctrlShot" hidden>
                 <button class="btn pink" id="saveShot">♥ Save photo</button>
                 <button class="btn white sm" id="retake">↺ Retake</button>
+                <button class="btn white sm" id="cancelShot">✕ Cancel</button>
               </div>
               <p class="booth-tip" id="boothTip">Tap <b>Start camera</b> and allow camera access. Nothing is uploaded — your photo stays on your device.</p>
             </div>
@@ -403,6 +405,6 @@
     </svg>
 
     <script src="script.js?v=4"></script>
-    <script src="photobooth.js?v=3"></script>
+    <script src="photobooth.js?v=4"></script>
   </body>
 </html>
