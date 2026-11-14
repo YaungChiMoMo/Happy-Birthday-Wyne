@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Happy Birthday Wyne</title>
+    <meta name="description" content="A little birthday world, built block by block for Wyne." />
+    <meta property="og:title" content="Happy Birthday Wyne ♥" />
+    <meta property="og:description" content="A little birthday world, built block by block for you." />
+    <meta name="theme-color" content="#a9dcff" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 7 7' shape-rendering='crispEdges'%3E%3Cpath fill='%23d9577f' d='M1 0h2v1H1zM4 0h2v1H4zM0 1h7v3H0zM1 4h5v1H1zM2 5h3v1H2zM3 6h1v1H3z'/%3E%3Cpath fill='%23ff8fb1' d='M1 1h1v1H1zM2 1h1v3H1V2h1zM4 1h2v3H4zM3 2h1v3H3zM2 4h3v1H2z'/%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=Silkscreen&family=Caveat:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="sky" id="sky"></div>
+    <canvas id="fx"></canvas>
+    <div class="tr" id="tr"></div>
+
+    <nav class="nav" id="nav">
+      <span class="brand" data-spr="gem"></span>
+      <div class="links" id="links">
+        <div class="pill" id="pill"></div>
+        <a href="#home" data-p="home">Home</a>
+        <a href="#songs" data-p="songs">Songs</a>
+        <a href="#countdown" data-p="countdown">Countdown</a>
+        <a href="#wishes" data-p="wishes">Birthday Wishes</a>
+      </div>
+      <button class="help" id="helpBtn" aria-label="How to use">?</button>
+    </nav>
+
+    <main>
+      <!-- ================= LOGIN (opening screen, not in menu) ================= -->
+      <section class="page" id="login">
+        <div class="login-box">
+          <span class="icon" data-spr="heart"></span>
+          <div class="label">Thel Wyne Lay Ready ♥</div>
+          <h1 class="welcome">Welcome, Wyne</h1>
+          <p class="welcome-sub">
+            A little world was built just for you, block by block.
+          </p>
+          <form class="card box" id="loginForm" autocomplete="off">
+            <label class="field"
+              ><span>USERNAME</span><input id="user"
+            /></label>
+            <label class="field"
+              ><span>PASSWORD</span><input id="pass" type="password"
+            /></label>
+            <button class="btn" type="submit" id="enterBtn">
+              ▶ Press Start
+            </button>
+            <p class="err" id="loginErr"></p>
+          </form>
+        </div>
+      </section>
+
+      <!-- ================= HOME ================= -->
+      <section class="page" id="home">
+        <div class="hero" id="hero">
+          <div
+            class="floater"
+            style="width: 62px; left: 6%; top: 12%"
+            data-depth="26"
+          >
+            <span data-spr="gem"></span>
+          </div>
+          <div
+            class="floater"
+            style="width: 52px; right: 8%; top: 58%"
+            data-depth="-22"
+          >
+            <span data-spr="heart"></span>
+          </div>
+          <div
+            class="floater"
+            style="width: 44px; left: 12%; bottom: 6%"
+            data-depth="18"
+          >
+            <span data-spr="note"></span>
+          </div>
+          <div
+            class="floater"
+            style="width: 40px; right: 16%; top: 8%"
+            data-depth="-14"
+          >
+            <span data-spr="star"></span>
+          </div>
+          <div class="hero-inner">
+            <div class="label pop" style="animation-delay: 0.1s">
+              ♥ Happy Birthday ♥
+            </div>
+            <h1 style="margin-top: 16px">
+              <span
+                class="l1 pop"
+                style="display: block; animation-delay: 0.35s"
+                >To my</span
+              ><span class="l2 pop" id="heroName" style="animation-delay: 0.6s"
+                >Dearest CARAT</span
+              >
+            </h1>
+            <p class="lead pop" style="animation-delay: 0.9s">
+              Today the whole sky is light blue for you. I built this little
+              world one block at a time — with music, a countdown, and a letter
+              from my heart.
+            </p>
+            <div
+              class="pop"
+              style="
+                animation-delay: 1.2s;
+                display: flex;
+                gap: 18px;
+                justify-content: center;
+                flex-wrap: wrap;
+              "
+            >
+              <a class="btn pink" href="#wishes">✉ Open your letter</a>
+              <a class="btn white" href="#songs">♪ Our songs</a>
+            </div>
+          </div>
+        </div>
+        <div class="wrap">
+          <div class="equation reveal">
+            <div class="eq">13<b>+</b>3<b>+</b>1<b>=</b>17</div>
+            <p>
+              …plus one more shining carat: you
+              <span
+                class="heart"
+                data-spr="heart"
+                style="display: inline-block; width: 26px; vertical-align: -4px"
+              ></span>
+            </p>
+          </div>
+          <div class="sec-head reveal">
+            <div class="label">Choose a room</div>
+            <h2>Your little world</h2>
+            <p>Tap anywhere to make the sky ripple.</p>
+          </div>
+          <div class="tiles">
+            <a class="tile box reveal" href="#songs"
+              ><span class="ico" data-spr="note"></span>
+              <h3>Songs</h3>
+              <p>SEVENTEEN tracks that you might love.</p></a
+            >
+            <a class="tile box reveal" href="#countdown"
+              ><span class="ico" data-spr="clock"></span>
+              <h3>Countdown</h3>
+              <p>Your own countdown — rename it, write notes, save it.</p></a
+            >
+            <a class="tile box reveal" href="#wishes"
+              ><span class="ico" data-spr="letter"></span>
+              <h3>Birthday Wishes</h3>
+              <p>A sealed letter, waiting only for you.</p></a
+            >
+          </div>
+        </div>
+      <div class="next-wrap reveal"><div class="label">What's next?</div><a class="btn pink" href="#songs">Next: Songs ▶</a></div>
+      </section>
+
+      <!-- ================= SONGS ================= -->
+      <section class="page" id="songs">
+        <div class="wrap">
+          <div class="sec-head reveal">
+            <div class="label">Part 1 · From me</div>
+            <h2>Our Songs</h2>
+            <p>My playlist for us — songs that remind me of you.</p>
+          </div>
+          <div class="featured box reveal">
+            <div class="feat-art">
+              <div class="jukebox">
+                <div class="hug" id="disc"><span class="f1" data-spr="hug1"></span><span class="f2" data-spr="hug2"></span></div>
+                <div class="notes-fly">
+                  <span data-spr="heart"></span><span data-spr="heart"></span
+                  ><span data-spr="heart"></span>
+                </div>
+              </div>
+            </div>
+            <div class="feat-body">
+              <div class="label">Our playlist</div>
+              <h3 id="plTitle"></h3>
+              <div class="sub" id="plSub"></div>
+              <div class="now">
+                <div class="eqb" id="eqb"><i></i><i></i><i></i><i></i></div>
+                <span id="nowTitle"></span>
+              </div>
+              <div class="progress"><div id="prog"></div></div>
+              <div class="times">
+                <span id="tCur">0:00</span><span id="tDur">0:00</span>
+              </div>
+              <div class="controls">
+                <button class="btn white cbtn" id="prev" aria-label="Previous">
+                  ◀◀
+                </button>
+                <button
+                  class="btn cbtn"
+                  id="playBtn"
+                  aria-label="Play"
+                  style="width: 56px; height: 56px"
+                >
+                  ▶
+                </button>
+                <button class="btn white cbtn" id="next" aria-label="Next">
+                  ▶▶
+                </button>
+                <a
+                  class="btn sm white spot"
+                  style="width: auto; margin: 0 0 0 auto"
+                  id="plLink" href="#"
+                  target="_blank"
+                  rel="noopener"
+                  ><svg viewBox="0 0 24 24"><use href="#spotico" /></svg
+                  >Playlist</a
+                >
+              </div>
+              <div id="spotifyEmbed" style="margin-bottom: 14px; height: 80px; overflow: hidden; border-radius: 12px"></div>
+              <ul class="tracklist" id="tracklist"></ul>
+            </div>
+          </div>
+          <div class="sec-head reveal" style="margin-top: 90px">
+            <div class="label">Part 2 · Just for you</div>
+            <h2>Songs You Might Love</h2>
+            <p>I don't know your favourites yet, so here are some SEVENTEEN songs I think you'll love. Tap a card to listen on Spotify.</p>
+          </div>
+          <div class="songs" id="songGrid"></div>
+        </div>
+      <div class="next-wrap reveal"><div class="label">What's next?</div><a class="btn pink" href="#countdown">Next: Countdown ▶</a></div>
+      </section>
+
+      <!-- ================= COUNTDOWN ================= -->
+      <section class="page" id="countdown">
+        <div class="cd">
+          <div class="cd-title-wrap reveal">
+            <div class="label">Countdown</div>
+            <div
+              class="cd-title"
+              id="cdTitle"
+              contenteditable="true"
+              spellcheck="false"
+            >
+              Days until your birthday
+            </div>
+            <span class="edit-hint">✎ tap the title to rename it</span>
+          </div>
+          <div class="cd-panel box reveal">
+            <div class="units" id="units">
+              <div class="unit">
+                <div class="digits" id="d-days"></div>
+                <small>DAYS</small>
+              </div>
+              <div class="unit">
+                <div class="digits" id="d-hours"></div>
+                <small>HOURS</small>
+              </div>
+              <div class="unit">
+                <div class="digits" id="d-mins"></div>
+                <small>MINUTES</small>
+              </div>
+              <div class="unit">
+                <div class="digits" id="d-secs"></div>
+                <small>SECONDS</small>
+              </div>
+            </div>
+            <div class="reached" id="reached">
+              It's your day! Happy Birthday ♥
+            </div>
+            <div class="secblocks" id="secblocks"></div>
+            <div class="cd-date" id="cdDate"></div>
+          </div>
+
+          <div class="cd-grid">
+            <div class="panel box soft reveal">
+              <h3>
+                <span
+                  data-spr="clock"
+                  style="width: 24px; display: inline-block"
+                ></span
+                >The date
+              </h3>
+              <p class="desc">Choose the day to count down to.</p>
+              <input
+                class="inp"
+                type="date"
+                id="dateInput"
+                aria-label="Countdown date"
+              />
+              <h3 style="margin-top: 6px">
+                <span
+                  data-spr="star"
+                  style="width: 22px; display: inline-block"
+                ></span
+                >Title
+              </h3>
+              <p class="desc">Or rename your countdown here.</p>
+              <input class="inp" id="titleInput" maxlength="60" />
+            </div>
+            <div class="panel box soft reveal">
+              <h3>
+                <span
+                  data-spr="heart"
+                  style="width: 24px; display: inline-block"
+                ></span
+                >My notes
+              </h3>
+              <p class="desc">
+                Wishes, plans, little things to remember. Tap a note to edit it.
+              </p>
+              <textarea
+                class="inp"
+                id="noteInput"
+                placeholder="Write a note…"
+                maxlength="160"
+              ></textarea>
+              <button class="btn sm" id="addNote">+ Add note</button>
+              <div class="notes" id="notes"></div>
+            </div>
+          </div>
+          <div class="savebar">
+            <button class="btn pink" id="saveBtn">♥ Save my countdown</button>
+          </div>
+        </div>
+      <div class="next-wrap reveal"><div class="label">What's next?</div><a class="btn pink" href="#wishes">Next: Birthday Wishes ✉</a></div>
+      </section>
+
+      <!-- ================= WISHES ================= -->
+      <section class="page" id="wishes">
+        <div class="wrap">
+          <div class="lockbox box" id="lockbox">
+            <span class="lockicon" data-spr="lock"></span>
+            <div class="label">Birthday Wishes</div>
+            <h2>Your letter is locked</h2>
+            <p>It will open on your birthday,<br><b id="lockDate"></b> (Japan time).<br>Come back then ♥</p>
+            <div class="lockcd" id="lockcd"></div>
+            <div class="lockbtns">
+              <a class="btn pink" href="#countdown">See the countdown</a>
+              <button class="btn white" id="previewBtn" hidden>👀 Preview (only on your computer)</button>
+            </div>
+          </div>
+          <div class="mail">
+            <div class="label">You've got mail</div>
+            <h1>A letter for you</h1>
+            <div class="sub" id="mailTo">to my dearest friend</div>
+            <div
+              class="env-wrap"
+              id="env"
+              role="button"
+              tabindex="0"
+              aria-label="Open the letter"
+            >
+              <div class="env">
+                <div class="back"></div>
+                <div class="peek"><span class="peek-txt">For Wyne ♥</span></div>
+                <div class="front"></div>
+                <div class="flap"></div>
+                <span class="seal" data-spr="heart"></span>
+              </div>
+            </div>
+            <div class="tap" id="tapHint">
+              <span class="blink">▶</span> TAP TO OPEN
+            </div>
+          </div>
+
+          <div class="letter-wrap" id="letterWrap">
+            <div class="letter">
+              <div class="stamp" data-spr="gem"></div>
+              <span class="corner c1" data-spr="flower"></span>
+              <h3 id="letterTo">My dearest Wyne,</h3>
+              <p class="w">I tried to find the right words for today, and I realised no word is long enough to say how glad I am that you were born.</p>
+              <p class="w">How strange and wonderful! Two strangers became best friends. We haven’t met in person yet, but somehow, our hearts have never felt like strangers.</p>
+              <p class="w">You’re my best friend forever. This birthday message is my little way of showing you that I remember your special day and reminding you how much I love you.</p>
+              <p class="w">So, on your birthday, I want you to know that you deserve every good thing in this world. You deserve to laugh endlessly and to shine like the brightest diamond in every room you walk into.</p>
+              <p class="w">May your life always be filled with happiness, blessings, joy, and the best people.</p>
+              <p class="w">Whatever this new year of your life brings, I’ll be right here, cheering the loudest for you, like an encore that never ends. ❤️</p>
+              <p class="w">Happy birthday. I love you, always.</p>
+              <p class="w sign">— your forever friend ♥</p>
+              <span class="wax" data-spr="heart"></span>
+            </div>
+
+            <div class="ps reveal">
+              <p>P.S. there's one more secret…</p>
+              <button class="heartbtn" id="heartBtn" aria-label="Open secret">
+                <span data-spr="heart"></span>
+              </button>
+              <button class="btn pink" id="surpriseBtn">Open my heart</button>
+            </div>
+
+            <div class="sec-head reveal">
+              <div class="label">Our future moments</div>
+              <h2>Memories we will make</h2>
+              <p>
+                These frames are waiting for our first photos together. Tap a frame to add a photo, and tap the words to write your own memory ♥
+              </p>
+            </div>
+            <div class="gallery reveal" id="gallery"></div>
+
+            <div class="dedication box reveal">
+              <div class="gems">
+                <span data-spr="gem"></span><span data-spr="heart"></span
+                ><span data-spr="gem"></span>
+              </div>
+              <div class="label">A dedication</div>
+              <h2>Love You, Always</h2>
+              <p>
+                Thirteen voices, three units, one team — and one friend who
+                shines like the diamond the fandom is named after. Wherever the
+                music takes you, I hope you always find your way back to the
+                people who love you. I'm one of them, forever.
+              </p>
+              <div class="tag">Happy Birthday · always seventeen at heart</div>
+            </div>
+            <div class="next-wrap reveal"><div class="label">What's next?</div><a class="btn pink" href="#home">⌂ Back to Home</a></div>
+            <footer>MADE WITH LOVE · BLOCK BY BLOCK</footer>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div class="modal" id="guide">
+      <div class="box guide">
+        <span data-spr="heart" style="width:48px;display:inline-block"></span>
+        <div class="label">How to open your gift</div>
+        <h3>Welcome, Wyne!</h3>
+        <ol class="steps">
+          <li><span class="sn">1</span><span><b>Songs</b> — listen to our songs. Tap a song to play it.</span></li>
+          <li><span class="sn">2</span><span><b>Countdown</b> — see how long until your birthday, and write your own notes.</span></li>
+          <li><span class="sn">3</span><span><b>Birthday Wishes</b> — my letter to you. It unlocks on your birthday, then tap the envelope to open it.</span></li>
+        </ol>
+        <p class="tip">Use the menu at the top to move between pages. Tap <b>?</b> anytime to see this again.</p>
+        <button class="btn" id="guideGo">Let's start ▶</button>
+      </div>
+    </div>
+    <div class="modal" id="modal">
+      <div class="box">
+        <span
+          data-spr="heart"
+          style="width: 64px; display: inline-block"
+        ></span>
+        <div class="label">Secret unlocked</div>
+        <h3>You are my favourite person</h3>
+        <p>
+          If our friendship were an album, every track would be a title track.
+          Thank you for being exactly who you are. I'm so lucky I found you.
+          Today and every day — you deserve to be celebrated.
+        </p>
+        <button class="btn" id="closeModal">Keep it forever ♥</button>
+      </div>
+    </div>
+    <div class="toast" id="toast">
+      <span data-spr="heart" style="width: 20px; display: inline-block"></span
+      ><span id="toastTxt">Saved!</span>
+    </div>
+
+    <svg width="0" height="0" style="position: absolute">
+      <symbol id="spotico" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="11" fill="currentColor" opacity=".2" />
+        <path
+          d="M6.5 9.3c3.8-1.1 8-.8 11.2 1M7.2 12.4c3.1-.9 6.4-.6 9.1.9M7.8 15.3c2.5-.6 5-.4 7.1.7"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.8"
+          stroke-linecap="round"
+        />
+      </symbol>
+    </svg>
+
+    <script src="script.js"></script>
+  </body>
+</html>
