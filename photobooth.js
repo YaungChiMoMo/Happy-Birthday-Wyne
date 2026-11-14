@@ -192,7 +192,8 @@
   const frameById = (id) => FRAMES.find((f) => f.id === id) || FRAMES[0];
 
   function overlay(id) {
-    if (overlays[id]) return overlays[id];
+    const key = `${id}|${today()}`;
+    if (overlays[key]) return overlays[key];
     const c = document.createElement("canvas");
     c.width = W;
     c.height = H;
@@ -201,7 +202,7 @@
     f.base(g);
     g.clearRect(HOLE.x, HOLE.y, HOLE.w, HOLE.h);
     f.deco(g);
-    overlays = { ...overlays, [id]: c };
+    overlays = { ...overlays, [key]: c };
     return c;
   }
 
@@ -233,9 +234,19 @@
     else drawPlaceholder(ctx);
     ctx.drawImage(overlay(frameId), 0, 0);
   }
+  let shotBlob = null,
+    blobToken = 0;
+  function prepareBlob() {
+    const t = ++blobToken;
+    shotBlob = null;
+    canvas.toBlob((b) => {
+      if (t === blobToken) shotBlob = b;
+    }, "image/png");
+  }
   function refresh() {
     if (raf) return; // live loop redraws by itself
     render(still && still.img, still && still.mirror);
+    if (still) prepareBlob();
   }
 
   /* ---------- UI state ---------- */
@@ -294,11 +305,15 @@
     stream = null;
     video.srcObject = null;
   }
+  let starting = false;
   async function startCamera() {
+    if (starting || stream) return;
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       tip("This browser can't open the camera here. You can upload a photo instead.");
       return;
     }
+    starting = true;
+    $("#camBtn").disabled = true;
     try {
       stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 1280 } },
@@ -306,6 +321,10 @@
       });
       video.srcObject = stream;
       await video.play();
+      if (current !== "photobooth" || document.hidden) {
+        stopCamera();
+        return;
+      }
       still = null;
       setMode("live");
       tip("Smile! Tap Take photo and hold still for 3 seconds.");
@@ -316,6 +335,9 @@
       setMode("idle");
       tip(cameraError(err));
       toast("The camera could not start");
+    } finally {
+      starting = false;
+      $("#camBtn").disabled = false;
     }
   }
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -337,7 +359,7 @@
     shot.getContext("2d").drawImage(video, 0, 0);
     stopCamera();
     still = { img: shot, mirror: true };
-    render(shot, true);
+    refresh();
     setMode("shot");
     tip("Love it? Tap Save photo. Not quite? Retake, or try another frame.");
     const fl = $("#boothFlash");
@@ -380,7 +402,7 @@
       const img = await loadImage(file);
       stopCamera();
       still = { img, mirror: false };
-      render(img, false);
+      refresh();
       setMode("shot");
       tip("Love it? Tap Save photo, or try another frame.");
     } catch (err) {
@@ -400,7 +422,7 @@
     setTimeout(() => URL.revokeObjectURL(url), 4000);
   }
   async function savePhoto() {
-    const blob = await new Promise((r) => canvas.toBlob(r, "image/png"));
+    const blob = shotBlob || (await new Promise((r) => canvas.toBlob(r, "image/png")));
     if (!blob) {
       toast("Sorry, the photo could not be saved");
       return;

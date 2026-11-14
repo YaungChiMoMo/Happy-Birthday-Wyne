@@ -1217,8 +1217,13 @@ function updateLock() {
   const L = wishesLocked();
   $("#wishes").classList.toggle("locked", L);
   const tab = $('#links a[data-p="wishes"]');
-  tab.textContent = L ? "Birthday Wishes 🔒" : "Birthday Wishes";
-  movePill();
+  if (tab.dataset.locked !== String(L)) {
+    tab.dataset.locked = String(L);
+    tab.innerHTML = L
+      ? `Birthday Wishes<span class="tab-lock" role="img" aria-label="locked">${sprite("lock")}</span>`
+      : "Birthday Wishes";
+    movePill();
+  }
   if (L) {
     const s = Math.max(0, Math.floor((unlockAt - Date.now()) / 1000));
     $("#lockcd").innerHTML = [
