@@ -912,6 +912,7 @@ textarea.inp {
 }
 .panel h3 span {
   flex: none;
+  width: 24px;
 }
 .panel .desc {
   margin-bottom: 16px;
