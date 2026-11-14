@@ -82,6 +82,34 @@
     }
     return c.font;
   }
+  /* Caption: shrink until it fits the width AND height of its space, then
+     centre it by where the letters are really drawn. Burmese (and other
+     scripts) are taller than the pixel font, and some Burmese fonts report a
+     width that differs from what they draw, so normal centring puts the text
+     too low or off to one side. */
+  function captionText(c, str, cy, maxW, maxH, weight, size, family, fill, shadow) {
+    c.textAlign = "left";
+    c.textBaseline = "alphabetic";
+    let px = size + 2,
+      m,
+      inkW,
+      inkH;
+    do {
+      px -= 2;
+      c.font = `${weight} ${px}px ${family}`;
+      m = c.measureText(str);
+      inkW = m.actualBoundingBoxLeft + m.actualBoundingBoxRight;
+      inkH = m.actualBoundingBoxAscent + m.actualBoundingBoxDescent;
+    } while (px > 20 && (Math.max(inkW, m.width) > maxW || inkH > maxH));
+    const x = W / 2 - (m.actualBoundingBoxRight - m.actualBoundingBoxLeft) / 2,
+      y = cy + (m.actualBoundingBoxAscent - m.actualBoundingBoxDescent) / 2;
+    if (shadow) {
+      c.fillStyle = shadow;
+      c.fillText(str, x + 5, y + 5);
+    }
+    c.fillStyle = fill;
+    c.fillText(str, x, y);
+  }
   /* a tilted pixel label, like a sticker stuck on the photo */
   function tag(c, str, x, y, deg, font, bg, fg) {
     c.save();
@@ -129,7 +157,7 @@
         tag(c, WORDS.nick, W - 240, 190, 6, `26px ${FONT_TINY}`, "#fff", PAL.R);
         tag(c, WORDS.love, 240, HOLE.y + HOLE.h - 64, -5, `26px ${FONT_TINY}`, PAL.r, "#fff");
         const cap = caption.toUpperCase();
-        text(c, cap, W / 2, 945, fitFont(c, cap, 760, 700, 74, FONT_PIXEL), PAL.X, "#fff");
+        captionText(c, cap, 947, 760, 80, 700, 74, FONT_PIXEL, PAL.X, "#fff");
         text(c, WORDS.always, W / 2, 1020, `600 44px ${FONT_PIXEL}`, PAL.R, "#fff");
         const half = c.measureText(WORDS.always).width / 2;
         drawSprite(c, "heart", W / 2 - half - 70, 998, 6);
@@ -160,7 +188,7 @@
         tag(c, WORDS.nick, W / 2, 110, -3, `26px ${FONT_TINY}`, "#fff", PAL.R);
         tag(c, WORDS.love, W - 230, HOLE.y + HOLE.h - 70, 5, `26px ${FONT_TINY}`, PAL.R, "#fff");
         const cap = caption.toUpperCase();
-        text(c, cap, W / 2, 952, fitFont(c, cap, 760, 700, 60, FONT_PIXEL), "#fff", PAL.R);
+        captionText(c, cap, 954, 760, 80, 700, 60, FONT_PIXEL, "#fff", PAL.R);
         const line2 = `13 + 3 + 1 = 17 + YOU  ·  ${WORDS.always.toUpperCase()}`;
         text(c, line2, W / 2, 1025, fitFont(c, line2, 780, 400, 26, FONT_TINY), PAL.R);
         text(c, today(), W / 2, 1082, `20px ${FONT_TINY}`, PAL.R);
@@ -180,7 +208,7 @@
         tag(c, WORDS.fav, 270, HOLE.y + HOLE.h - 60, -4, `700 40px ${FONT_HAND}`, PAL.P, "#2a4a6e");
         drawSprite(c, "heart", 90, 80, 8);
         drawSprite(c, "star", HOLE.x + HOLE.w - 90, HOLE.y + HOLE.h - 80, 8);
-        text(c, caption, W / 2, 962, fitFont(c, caption, 740, 700, 80, FONT_HAND), "#2a4a6e");
+        captionText(c, caption, 950, 740, 88, 700, 80, FONT_HAND, "#2a4a6e");
         text(c, `${WORDS.love}, ${WORDS.always}`, W / 2, 1030, `600 42px ${FONT_HAND}`, PAL.R);
         const sub = AGE > 0 && AGE < 120 ? `turning ${AGE}  ·  ${today()}` : today();
         text(c, sub, W / 2, 1082, `600 36px ${FONT_HAND}`, "#41709c");
