@@ -454,6 +454,7 @@ tr.innerHTML = Array.from(
 ).join("");
 const pages = ["login", "home", "songs", "photobooth", "wishes"];
 let loggedIn = false;
+let guideOnArrival = false; // open the "how to" guide right after signing in
 try {
   loggedIn = sessionStorage.getItem("carat-in") === "1";
 } catch (e) {}
@@ -577,6 +578,7 @@ $("#loginForm").addEventListener("submit", (e) => {
   b.disabled = true;
   setTimeout(() => {
     loggedIn = true;
+    guideOnArrival = true;
     try {
       sessionStorage.setItem("carat-in", "1");
     } catch (e) {}
@@ -1179,22 +1181,15 @@ go();
 function openGuide() {
   $("#guide").classList.add("open");
 }
+const GUIDE_DELAY_MS = 400; // lets the page-change blocks clear first
 function maybeGuide() {
-  let seen = false;
-  try {
-    seen = localStorage.getItem("guide-seen") === "1";
-  } catch (e) {}
-  if (!seen)
-    setTimeout(() => {
-      if (current === "home") openGuide();
-    }, 2200);
+  if (!guideOnArrival) return;
+  guideOnArrival = false;
+  setTimeout(() => {
+    if (current === "home") openGuide();
+  }, GUIDE_DELAY_MS);
 }
-$("#guideGo").onclick = () => {
-  $("#guide").classList.remove("open");
-  try {
-    localStorage.setItem("guide-seen", "1");
-  } catch (e) {}
-};
+$("#guideGo").onclick = () => $("#guide").classList.remove("open");
 $("#guide").onclick = (e) => {
   if (e.target.id === "guide") $("#guideGo").click();
 };
