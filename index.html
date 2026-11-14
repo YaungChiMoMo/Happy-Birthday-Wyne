@@ -15,7 +15,7 @@
       href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=Silkscreen&family=Caveat:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="style.css?v=3" />
+    <link rel="stylesheet" href="style.css?v=4" />
   </head>
   <body>
     <div class="sky" id="sky"></div>
@@ -236,6 +236,9 @@
             <div class="booth-side">
               <h3><span class="spr-sm" data-spr="star"></span>Choose a frame</h3>
               <div class="frames" id="frames" role="radiogroup" aria-label="Photo frame"></div>
+              <h3><span class="spr-sm" data-spr="letter"></span>Your words</h3>
+              <input class="inp" id="boothCaption" aria-label="Photo caption" />
+              <p class="booth-hint">Write anything you like. Today's date is added for you.</p>
               <div class="booth-ctrl" id="ctrlLive">
                 <button class="btn pink" id="camBtn">● Start camera</button>
                 <button class="btn pink" id="snapBtn" hidden>● Take photo</button>
@@ -400,6 +403,6 @@
     </svg>
 
     <script src="script.js?v=3"></script>
-    <script src="photobooth.js?v=1"></script>
+    <script src="photobooth.js?v=2"></script>
   </body>
 </html>

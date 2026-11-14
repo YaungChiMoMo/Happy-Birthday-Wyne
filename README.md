@@ -18,7 +18,7 @@ A little pixel-art birthday website, built block by block.
 
 ## Easy changes (top of `script.js`)
 - `CONFIG`: name, birth year, Japan time zone, unlock date
-- Photobooth frames: `FRAMES` in `photobooth.js`
+- Photobooth frames: `FRAMES` in `photobooth.js`; sticker words (love you, Thel Thel...): `WORDS` in `photobooth.js`
 - `PHOTOS`: add `src: "Images/photo1.jpg"` to show a photo to everyone
 - `LOGIN`: username, password and wrong-password message
 - `OUR_PLAYLIST` and `SONGS`: songs and Spotify links

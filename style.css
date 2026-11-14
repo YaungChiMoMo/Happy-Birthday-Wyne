@@ -1024,6 +1024,15 @@ textarea.inp {
   background: #ffe2ec;
   box-shadow: var(--ring3-ink), 0 0 0 7px rgba(255, 143, 177, 0.35);
 }
+.booth-side .inp {
+  margin-bottom: 8px;
+}
+.booth-hint {
+  margin-bottom: 28px;
+  font-family: var(--tiny);
+  font-size: 11px;
+  color: var(--blue-d);
+}
 .booth-ctrl {
   display: flex;
   flex-wrap: wrap;
